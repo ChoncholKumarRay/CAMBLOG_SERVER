@@ -153,6 +153,7 @@ router.get("/categories", async (req, res) => {
 });
 
 // Get single blog by ID (with comments)
+// Get single blog by ID (with comments)
 router.get("/:id", async (req, res) => {
   try {
     const [blogs] = await db.query("SELECT * FROM blogs WHERE id = ?", [
@@ -164,10 +165,6 @@ router.get("/:id", async (req, res) => {
     }
 
     const blogData = blogs[0];
-
-    // Debug: Log what we're getting
-    // console.log("Raw comments from DB:", blogData.comments);
-    // console.log("Type of comments:", typeof blogData.comments);
 
     // Parse authors
     let authors;
@@ -192,11 +189,30 @@ router.get("/:id", async (req, res) => {
           comments = [];
         }
       } else if (Array.isArray(blogData.comments)) {
-        // Already an array (MySQL returned JSON as object)
         comments = blogData.comments;
       } else if (typeof blogData.comments === "object") {
-        // MySQL might return JSON as object, convert to array
         comments = Object.values(blogData.comments);
+      }
+    }
+
+    // Parse and optimize featured_image (Cloudinary metadata)
+    let featuredImage = null;
+    if (blogData.featured_image) {
+      try {
+        const imageData =
+          typeof blogData.featured_image === "string"
+            ? JSON.parse(blogData.featured_image)
+            : blogData.featured_image;
+
+        // Send only essential metadata to frontend
+        featuredImage = {
+          public_id: imageData.public_id,
+          format: imageData.format,
+          resource_type: imageData.resource_type || "image",
+        };
+      } catch (e) {
+        console.error("Error parsing featured_image:", e);
+        featuredImage = null;
       }
     }
 
@@ -204,6 +220,7 @@ router.get("/:id", async (req, res) => {
       ...blogData,
       authors: authors,
       comments: comments,
+      featured_image: featuredImage,
     };
 
     res.json(blog);
