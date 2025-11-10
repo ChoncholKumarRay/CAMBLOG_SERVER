@@ -16,7 +16,6 @@ router.get("/", async (req, res) => {
     const search = req.query.search;
     const sortBy = req.query.sortBy || "latest";
 
-    // console.log(limit);
     // Build WHERE clause for filters
     let whereConditions = [];
     let queryParams = [];
@@ -72,8 +71,9 @@ router.get("/", async (req, res) => {
 
     const [blogs] = await db.query(blogsQuery, [...queryParams, limit, offset]);
 
-    // Parse JSON authors field
+    // Parse JSON fields and optimize featured_image for frontend
     const blogsWithParsedData = blogs.map((blog) => {
+      // Parse authors
       let authors;
       try {
         authors =
@@ -83,9 +83,32 @@ router.get("/", async (req, res) => {
       } catch (e) {
         authors = [blog.authors];
       }
+
+      // Parse and optimize featured_image (Cloudinary metadata)
+      let featuredImage = null;
+      if (blog.featured_image) {
+        try {
+          const imageData =
+            typeof blog.featured_image === "string"
+              ? JSON.parse(blog.featured_image)
+              : blog.featured_image;
+
+          // Send only essential metadata to frontend
+          featuredImage = {
+            public_id: imageData.public_id,
+            format: imageData.format,
+            resource_type: imageData.resource_type || "image",
+          };
+        } catch (e) {
+          console.error("Error parsing featured_image:", e);
+          featuredImage = null;
+        }
+      }
+
       return {
         ...blog,
         authors: authors,
+        featured_image: featuredImage,
       };
     });
 
@@ -128,7 +151,7 @@ router.get("/categories", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch categories" });
   }
 });
-// Get single blog by ID (with comments)
+
 // Get single blog by ID (with comments)
 router.get("/:id", async (req, res) => {
   try {
