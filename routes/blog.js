@@ -219,22 +219,22 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
     // Handle featured image upload if provided
     if (req.file) {
       try {
-        console.log("📤 Processing image upload...");
+        console.log("Processing image upload...");
 
         // Get original image metadata
-        const originalMetadata = await getImageMetadata(req.file.buffer);
-        console.log("📊 Original image:", originalMetadata);
+        // const originalMetadata = await getImageMetadata(req.file.buffer);
+        // console.log("Original image:", originalMetadata);
 
         // Compress image before uploading to Cloudinary
         const compressedBuffer = await compressImage(req.file.buffer);
-        console.log("✅ Image compressed");
+        // console.log("Image compressed");
 
         // Upload to Cloudinary
         const cloudinaryResult = await uploadToCloudinary(
           compressedBuffer,
           blogId
         );
-        console.log("☁️ Uploaded to Cloudinary:", cloudinaryResult.public_id);
+        console.log("Uploaded to Cloudinary:", cloudinaryResult.public_id);
 
         // Store Cloudinary metadata
         featuredImageData = {
@@ -248,7 +248,7 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
           created_at: cloudinaryResult.created_at,
         };
       } catch (imageError) {
-        console.error("❌ Image upload error:", imageError);
+        console.error("Image upload error:", imageError);
         return res.status(500).json({
           error: "Failed to upload image",
           details: imageError.message,
@@ -273,7 +273,7 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
       ]
     );
 
-    console.log("✅ Blog created successfully:", blogId);
+    console.log("Blog created successfully:", blogId);
 
     res.status(201).json({
       message: "Blog created successfully",
@@ -281,7 +281,7 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
       featuredImage: featuredImageData,
     });
   } catch (error) {
-    console.error("❌ Error creating blog:", error);
+    console.error("Error creating blog:", error);
     res.status(500).json({
       error: "Failed to create blog",
       details: error.message,

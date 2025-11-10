@@ -11,9 +11,7 @@ cloudinary.config({
   secure: true,
 });
 
-/**
- * Upload image to Cloudinary
- */
+// Upload Image to Cloudinary
 export const uploadToCloudinary = (fileBuffer, blogId) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -23,7 +21,7 @@ export const uploadToCloudinary = (fileBuffer, blogId) => {
         resource_type: "image",
         format: "webp",
         transformation: [
-          { width: 1200, height: 630, crop: "fill", quality: "auto:good" },
+          { width: 1920, height: 1080, crop: "limit", quality: "auto:good" },
           { fetch_format: "auto" },
         ],
         overwrite: true,
@@ -39,9 +37,7 @@ export const uploadToCloudinary = (fileBuffer, blogId) => {
   });
 };
 
-/**
- * Delete image from Cloudinary
- */
+// Delete Image from Cloudinary
 export const deleteFromCloudinary = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
@@ -52,4 +48,4 @@ export const deleteFromCloudinary = async (publicId) => {
   }
 };
 
-export { cloudinary };
+export default cloudinary;
