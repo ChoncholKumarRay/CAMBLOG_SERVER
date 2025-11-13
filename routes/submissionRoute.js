@@ -11,7 +11,7 @@ const submissionLimiter = rateLimit({
   message: { error: "Too many submissions, please try again later." },
 });
 
-// POST /api/submission
+// POST /api/blog/submission
 router.post(
   "/",
   submissionLimiter,

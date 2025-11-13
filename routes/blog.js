@@ -3,7 +3,10 @@ const router = Router();
 import db from "../config/db.js";
 import { v4 as uuidv4 } from "uuid";
 import upload from "../middleware/upload.js";
-import { uploadToCloudinary } from "../config/cloudinary.js";
+import {
+  uploadToCloudinary,
+  uploadToCloudinaryBodyImage,
+} from "../config/cloudinary.js";
 import { compressImage, getImageMetadata } from "../utils/imageProcessor.js";
 
 // Get all blogs
@@ -153,7 +156,6 @@ router.get("/categories", async (req, res) => {
 });
 
 // Get single blog by ID (with comments)
-// Get single blog by ID (with comments)
 router.get("/:id", async (req, res) => {
   try {
     const [blogs] = await db.query("SELECT * FROM blogs WHERE id = ?", [
@@ -288,9 +290,9 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
           created_at: cloudinaryResult.created_at,
         };
       } catch (imageError) {
-        console.error("Image upload error:", imageError);
+        console.error("Feature Image upload error:", imageError);
         return res.status(500).json({
-          error: "Failed to upload image",
+          error: "Failed to upload feature image",
           details: imageError.message,
         });
       }
@@ -324,6 +326,34 @@ router.post("/new", upload.single("featured_image"), async (req, res) => {
     console.error("Error creating blog:", error);
     res.status(500).json({
       error: "Failed to create blog",
+      details: error.message,
+    });
+  }
+});
+
+router.post("/upload-image", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const compressedBuffer = await compressImage(req.file.buffer);
+
+    // Upload to Cloudinary
+    const result = await uploadToCloudinaryBodyImage(compressedBuffer);
+
+    res.status(200).json({
+      message: "Image uploaded successfully",
+      url: result.secure_url,
+      public_id: result.public_id,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+    });
+  } catch (error) {
+    console.error("Image upload error:", error);
+    res.status(500).json({
+      error: "Failed to upload image",
       details: error.message,
     });
   }

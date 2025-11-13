@@ -1,4 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
+import { v4 as uuidv4 } from "uuid";
+import dayjs from "dayjs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -9,9 +11,10 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true,
+  timeout: 10000,
 });
 
-// Upload Image to Cloudinary
+// Upload Feature Image to Cloudinary
 export const uploadToCloudinary = (fileBuffer, blogId) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -24,6 +27,31 @@ export const uploadToCloudinary = (fileBuffer, blogId) => {
           { fetch_format: "auto" },
         ],
         overwrite: true,
+        invalidate: true,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    uploadStream.end(fileBuffer);
+  });
+};
+
+// Upload Blog Body Image to Cloudinary
+export const uploadToCloudinaryBodyImage = (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    const date = dayjs().format("YYYYMMDD"); // current date
+    const publicId = `${date}-${uuidv4()}`;
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "blogs/images",
+        public_id: publicId,
+        resource_type: "image",
+        transformation: [{ quality: "auto:good" }, { fetch_format: "auto" }],
+        overwrite: false,
         invalidate: true,
       },
       (error, result) => {
