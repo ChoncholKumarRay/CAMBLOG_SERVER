@@ -1,5 +1,4 @@
 import { Router } from "express";
-const router = Router();
 import db from "../config/db.js";
 import { v4 as uuidv4 } from "uuid";
 import upload from "../middleware/upload.js";
@@ -8,6 +7,11 @@ import {
   uploadToCloudinaryBodyImage,
 } from "../config/cloudinary.js";
 import { compressImage, getImageMetadata } from "../utils/imageProcessor.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const router = Router();
 
 // Get all blogs
 router.get("/", async (req, res) => {
@@ -341,13 +345,11 @@ router.post("/upload-image", upload.single("image"), async (req, res) => {
 
     // Upload to Cloudinary
     const result = await uploadToCloudinaryBodyImage(compressedBuffer);
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 
     res.status(200).json({
       message: "Image uploaded successfully",
-      url: result.secure_url,
-      public_id: result.public_id,
-      width: result.width,
-      height: result.height,
+      url: `https://res.cloudinary.com/${cloudName}/image/upload/w_768,c_fill,f_auto,q_auto,dpr_auto/${result.public_id}`,
       format: result.format,
     });
   } catch (error) {
