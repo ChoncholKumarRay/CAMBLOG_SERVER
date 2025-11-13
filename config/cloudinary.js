@@ -19,7 +19,6 @@ export const uploadToCloudinary = (fileBuffer, blogId) => {
         folder: "blogs/featured",
         public_id: `featured-${blogId}`,
         resource_type: "image",
-        format: "webp",
         transformation: [
           { width: 1920, height: 1080, crop: "limit", quality: "auto:good" },
           { fetch_format: "auto" },
